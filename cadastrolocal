@@ -1,0 +1,116 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cadastro e Sorteio com Salvamento Local</title>
+  <script>
+    let inscritos = [];
+
+    function carregar() {
+      const dados = localStorage.getItem('inscritos');
+      inscritos = dados ? JSON.parse(dados) : [];
+      renderizar();
+    }
+
+    function salvar() {
+      const nome = document.getElementById("nome").value;
+      const cong = document.getElementById("congregacao").value;
+      const arroba = document.getElementById("arroba").value;
+
+      if (!nome || !cong || !arroba) {
+        alert("Preencha todos os campos!");
+        return;
+      }
+
+      const editando = document.getElementById("editando").value;
+      if (editando !== "") {
+        inscritos[editando] = { Nome: nome, Congregacao: cong, Arroba: arroba };
+        document.getElementById("editando").value = "";
+      } else {
+        inscritos.push({ Nome: nome, Congregacao: cong, Arroba: arroba });
+      }
+
+      localStorage.setItem('inscritos', JSON.stringify(inscritos));
+      document.getElementById("nome").value = "";
+      document.getElementById("congregacao").value = "";
+      document.getElementById("arroba").value = "";
+      renderizar();
+    }
+
+    function editar(index) {
+      const p = inscritos[index];
+      document.getElementById("nome").value = p.Nome;
+      document.getElementById("congregacao").value = p.Congregacao;
+      document.getElementById("arroba").value = p.Arroba;
+      document.getElementById("editando").value = index;
+    }
+
+    function excluir(index) {
+      if (confirm("Deseja realmente excluir este registro?")) {
+        inscritos.splice(index, 1);
+        localStorage.setItem('inscritos', JSON.stringify(inscritos));
+        renderizar();
+      }
+    }
+
+    function renderizar() {
+      const tbody = document.getElementById("lista");
+      tbody.innerHTML = "";
+      inscritos.forEach((p, i) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${i + 1}</td>
+          <td>${p.Nome}</td>
+          <td>${p.Congregacao}</td>
+          <td>${p.Arroba}</td>
+          <td>
+            <button onclick="editar(${i})">Editar</button>
+            <button onclick="excluir(${i})">Excluir</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function sortear() {
+      if (inscritos.length === 0) {
+        alert("Nenhum inscrito para sortear.");
+        return;
+      }
+      const i = Math.floor(Math.random() * inscritos.length);
+      const s = inscritos[i];
+      document.getElementById("resultado").innerText =
+        `🎉 ${s.Nome} (${s.Congregacao} - ${s.Arroba}) foi sorteado!`;
+    }
+
+    window.onload = carregar;
+  </script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    input { margin: 5px; padding: 5px; }
+    button { margin: 5px; padding: 6px 10px; }
+    table { margin-top: 10px; width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>Cadastro de Participantes (Local + Edição)</h1>
+  <input id="nome" placeholder="Nome completo" />
+  <input id="congregacao" placeholder="Congregação" />
+  <input id="arroba" placeholder="@ Responsável" />
+  <input id="editando" type="hidden" value="" />
+  <button onclick="salvar()">Salvar</button>
+
+  <h2>Inscritos</h2>
+  <table>
+    <thead><tr><th>#</th><th>Nome</th><th>Congregação</th><th>@</th><th>Ações</th></tr></thead>
+    <tbody id="lista"></tbody>
+  </table>
+
+  <h2>Sorteio</h2>
+  <button onclick="sortear()">Sortear</button>
+  <p id="resultado" style="font-weight: bold; font-size: 18px;"></p>
+</body>
+</html>
